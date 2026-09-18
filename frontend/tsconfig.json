@@ -1,5 +1,12 @@
 {
   "files": [],
+  // Exposed at the root so tsx (npm test) resolves the "@/" alias the same
+  // way vite does; the solution-style references below drive the builds.
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "references": [
     {
       "path": "./tsconfig.node.json"

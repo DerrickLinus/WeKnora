@@ -909,7 +909,22 @@ export function useChatStreamHandler(options: UseChatStreamHandlerOptions) {
           if (eventId) eventMap.set(eventId, answerEvent)
         }
         if (!answerEvent.content && message.content && String(message.content).trim()) {
-          answerEvent.content = message.content
+          // Catch up content written by other paths before the first answer
+          // event existed. Never inherit text from earlier live answer
+          // events: copying it here duplicates it beyond the reach of any
+          // later supersede (seen as stacked answers on retry and
+          // length-continuation rounds).
+          const hasLivePriorAnswer = stream.some(
+            (e) =>
+              e !== answerEvent &&
+              e.type === 'answer' &&
+              !e.superseded &&
+              e.content &&
+              String(e.content).trim(),
+          )
+          if (!hasLivePriorAnswer) {
+            answerEvent.content = message.content
+          }
         }
         if (data.content) {
           answerEvent.content = String(answerEvent.content || '') + String(data.content)
